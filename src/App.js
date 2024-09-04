@@ -225,17 +225,17 @@ function App() {
         onChange={(e) => setIdTarefa(e.target.value)}
       /><br />
 
-      <label>Título:</label>
+      <label>Nomes:</label>
       <input
-        placeholder="Título"
+        placeholder="Nomes"
         type="text"
         value={titulo}
         onChange={(e) => setTitulo(e.target.value)}
       /><br />
 
-      <label>Autor:</label>
+      <label>Data:</label>
       <input
-        placeholder="Autor"
+        placeholder="Data"
         type="text"
         value={autor}
         onChange={(e) => setAutor(e.target.value)}
@@ -249,8 +249,8 @@ function App() {
         {tarefas.map((tarefas) => (
           <li key={tarefas.id}>
             <strong>ID: {tarefas.id}</strong><br />
-            <strong>Título: {tarefas.titulo}</strong><br />
-            <strong>Autor: {tarefas.autor}</strong><br />
+            <strong>Nomes: {tarefas.titulo}</strong><br />
+            <strong>Data: {tarefas.autor}</strong><br />
             <button onClick={() => excluirTarefas(tarefas.id)}>Excluir</button>
           </li>
         ))}
