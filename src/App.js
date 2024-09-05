@@ -1,28 +1,16 @@
 import { useState, useEffect } from "react";
 import { db, auth } from './firebaseConnection'; 
-
 import {
-  doc,
-  setDoc,
-  collection,
-  addDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  onSnapshot
-} from 'firebase/firestore'
-
+  doc, setDoc, collection, addDoc, getDocs, updateDoc, deleteDoc, onSnapshot
+} from 'firebase/firestore';
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from 'firebase/auth'
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged
+} from 'firebase/auth';
+import './App.css';  // Linkando o novo CSS
 
 function App() {
-  const [titulo, setTitulo] = useState("");
-  const [autor, setAutor] = useState("");
+  const [nomes, setNomes] = useState("");
+  const [data, setData] = useState("");
   const [idTarefa, setIdTarefa] = useState("");
 
   const [email, setEmail] = useState("");
@@ -33,37 +21,28 @@ function App() {
   const [detalheUser, setDetalheUser] = useState({});
 
   useEffect(() => {
-    async function carregarTarefas() {
-      const unsubscribe = onSnapshot(collection(db, "tarefas"), (snapshot) => {
-        let listaTarefa = [];
-
-        snapshot.forEach((doc) => {
-          listaTarefa.push({
-            id: doc.id,
-            titulo: doc.data().titulo,
-            autor: doc.data().autor,
-          });
+    const unsubscribe = onSnapshot(collection(db, "tarefas"), (snapshot) => {
+      let listaTarefa = [];
+      snapshot.forEach((doc) => {
+        listaTarefa.push({
+          id: doc.id,
+          nomes: doc.data().nomes,
+          data: doc.data().data,
         });
-
-        setTarefas(listaTarefa);
       });
+      setTarefas(listaTarefa);
+    });
 
-      return () => unsubscribe();
-    }
-    
-    carregarTarefas();
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUsuario(true); // Se tem usuário logado
-        setDetalheUser({
-          id: user.uid,
-          email: user.email
-        });
+        setUsuario(true);
+        setDetalheUser({ id: user.uid, email: user.email });
       } else {
-        setUsuario(false); // Se não tem usuário logado
+        setUsuario(false);
         setDetalheUser({});
       }
     });
@@ -75,27 +54,18 @@ function App() {
       setEmail("");
       setSenha("");
     } catch (error) {
-      if (error.code === "auth/weak-password") {
-        alert("Senha muito fraca!");
-      } else if (error.code === "auth/email-already-in-use") {
-        alert("Email já cadastrado!");
-      } else {
-        alert("Erro ao criar usuário!");
-      }
+      alert("Erro ao criar usuário!");
     }
   }
 
   async function logarUsuario() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      setDetalheUser({
-        id: userCredential.user.uid,
-        email: userCredential.user.email
-      });
+      setDetalheUser({ id: userCredential.user.uid, email: userCredential.user.email });
       setEmail("");
       setSenha("");
     } catch (error) {
-      console.log("Erro: " + error);
+      alert("Erro ao fazer login");
     }
   }
 
@@ -106,21 +76,17 @@ function App() {
   }
 
   async function adicionarTarefas() {
-    if (titulo === "" || autor === "") {
+    if (nomes === "" || data === "") {
       alert("Preencha todos os campos!");
       return;
     }
 
     try {
-      await addDoc(collection(db, "tarefas"), {
-        titulo,
-        autor,
-      });
-      console.log("Cadastro realizado com sucesso");
-      setAutor("");
-      setTitulo("");
+      await addDoc(collection(db, "tarefas"), { nomes, data });
+      setData("");
+      setNomes("");
     } catch (error) {
-      console.log("Erro: " + error);
+      alert("Erro ao adicionar tarefa");
     }
   }
 
@@ -134,8 +100,8 @@ function App() {
       snapshot.forEach((doc) => {
         listaTarefa.push({
           id: doc.id,
-          titulo: doc.data().titulo,
-          autor: doc.data().autor,
+          nomes: doc.data().nomes,
+          data: doc.data().data,
         });
       });
 
@@ -154,16 +120,12 @@ function App() {
     const tarefaEditada = doc(db, "tarefas", idTarefa);
 
     try {
-      await updateDoc(tarefaEditada, {
-        titulo,
-        autor
-      });
-      console.log("Tarefa editada com sucesso");
+      await updateDoc(tarefaEditada, { nomes, data });
       setIdTarefa("");
-      setTitulo("");
-      setAutor("");
+      setNomes("");
+      setData("");
     } catch (error) {
-      console.log("Erro: " + error);
+      alert("Erro ao editar tarefa");
     }
   }
 
@@ -172,89 +134,70 @@ function App() {
 
     try {
       await deleteDoc(TarefaExcluida);
-      alert("Tarefa excluído com sucesso");
+      alert("Tarefa excluída com sucesso");
     } catch (error) {
       console.log("Erro: " + error);
     }
   }
 
   return (
-    <div>
-      <h1>Atividade De Lista De Tarefas</h1>
-        
-      { user && (
-        <div>
-          <strong>Seja bem-vindo(a) Você esta logado!</strong>
-          <span>ID: {detalheUser.id} - Email: {detalheUser.email}</span>
-          <br/>
-          <button onClick={fazerLogout}>Sair</button>
+    <div className="app-container">
+      <header>
+        <h1>Lista de Tarefas</h1>
+        <div className="login-section">
+          <label>Email:</label>
+          <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Digite seu email"/>
+          <label>Senha:</label>
+          <input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Digite sua senha"/>
+          <button onClick={logarUsuario}>Login</button>
+          <button onClick={novoUsuario}>Cadastrar</button>
+          <button onClick={fazerLogout}>Logout</button>
         </div>
-      )}
+        {user && (
+          <div className="user-info">
+            <strong>Bem-vindo, {detalheUser.email}!</strong>
+          </div>
+        )}
+      </header>
 
+      <main>
+        <section className="task-form">
+          <h2>Adicionar/Editar Tarefa</h2>
+          <input
+            type="text"
+            placeholder="ID da Tarefa"
+            value={idTarefa}
+            onChange={(e) => setIdTarefa(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Nome"
+            value={nomes}
+            onChange={(e) => setNomes(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Data"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+          />
+          <button onClick={adicionarTarefas}>Adicionar Tarefa</button>
+          <button onClick={buscarTarefas}>Buscar Tarefas</button>
+          <button onClick={editarTarefas}>Editar Tarefa</button>
+        </section>
 
-
-      <h2>Usuário</h2>
-
-      <label>Email:</label>
-      <input
-        placeholder="Insira um Email"
-        type="text"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      /><br />
-
-      <label>Senha:</label>
-      <input
-        placeholder="Insira uma Senha"
-        type="password"
-        value={senha}
-        onChange={(e) => setSenha(e.target.value)}
-      /><br />
-      <button onClick={novoUsuario}>Cadastrar</button>
-      <button onClick={logarUsuario}>Login</button>
-      <button onClick={fazerLogout}>Logout</button>
-      <br />
-
-      <hr />
-      <h2>Lista De Tarefas</h2>
-
-      <label>ID da Tarefa:</label>
-      <input
-        placeholder="ID da Tarefa"
-        value={idTarefa}
-        onChange={(e) => setIdTarefa(e.target.value)}
-      /><br />
-
-      <label>Nomes:</label>
-      <input
-        placeholder="Nomes"
-        type="text"
-        value={titulo}
-        onChange={(e) => setTitulo(e.target.value)}
-      /><br />
-
-      <label>Data:</label>
-      <input
-        placeholder="Data"
-        type="text"
-        value={autor}
-        onChange={(e) => setAutor(e.target.value)}
-      /><br />
-
-      <button onClick={adicionarTarefas}>Adicionar</button>
-      <button onClick={buscarTarefas}>Buscar</button>
-      <button onClick={editarTarefas}>Editar</button>
-
-      <ul>
-        {tarefas.map((tarefas) => (
-          <li key={tarefas.id}>
-            <strong>ID: {tarefas.id}</strong><br />
-            <strong>Nomes: {tarefas.titulo}</strong><br />
-            <strong>Data: {tarefas.autor}</strong><br />
-            <button onClick={() => excluirTarefas(tarefas.id)}>Excluir</button>
-          </li>
-        ))}
-      </ul>
+        <section className="task-preview">
+          <h2>Tarefas Criadas</h2>
+          <ul>
+            {tarefas.map((tarefa) => (
+              <li key={tarefa.id}>
+                <strong>{tarefa.nomes}</strong> - {tarefa.data}
+                <button onClick={() => excluirTarefas(tarefa.id)}>Excluir</button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </main>
     </div>
   );
 }
